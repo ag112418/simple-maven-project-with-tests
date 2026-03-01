@@ -1,16 +1,26 @@
 pipeline {
     agent any
+    tools {
+        maven "M3"
+    }
 
     stages {
-        stage('Build') {
+        stage('Long Running Work') {
             steps {
-                sh 'mvn -B -DskipTests clean package'
+                echo 'Starting long-running task: sleeping for 1000 seconds...'
+                sleep 1000
             }
         }
 
-        stage('Test') {
+        stage('Build') {
             steps {
-                sh 'mvn test'
+                sh "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
+            post {
+                success {
+                    junit '*/target/surefire-reports/TEST-.xml'
+                    archiveArtifacts 'target/*.jar'
+                }
             }
         }
     }
